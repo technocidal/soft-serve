@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -50,8 +51,11 @@ func EnsureWithin(reposDir string, repo string) error {
 		return ErrSystemMalfunction
 	}
 
-	// ensure the repo is within the repos directory
-	if !strings.HasPrefix(absRepo, absRepos) {
+	// ensure the repo is within the repos directory; the separator
+	// boundary prevents sibling directories like "repos-evil" from
+	// passing a plain prefix check against "repos"
+	absRepos = filepath.Clean(absRepos)
+	if absRepo != absRepos && !strings.HasPrefix(absRepo, absRepos+string(os.PathSeparator)) {
 		log.Debugf("repo path is outside of repos directory: %s", absRepo)
 		return ErrInvalidRepo
 	}
